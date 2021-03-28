@@ -15,10 +15,9 @@ class MainController implements ControllerProviderInterface
 
         $route->get('/', function () use ($app) {
             $repositories = $app['git']->getRepositories($app['git.repos']);
+            $directories = $app['git']->getDirectories($app['git.repos'], true);
             $categories = array();
             $noCategory = array();
-
-            $arrLen = count($repositories);
 
             foreach($repositories as &$repo) {
 	        if(!is_null($repo["category"])){
@@ -32,14 +31,15 @@ class MainController implements ControllerProviderInterface
                 }
             }
 
-	  // print count($noCategory);
-	  // print count($categories);
             uksort($categories, function ($k1, $k2) {
                 return strtolower($k2) < strtolower($k1);
             });
 
-
-            return $app['twig']->render('index.twig', array( 'noCategory' => $noCategory, 'categories' => $categories ));
+            return $app['twig']->render('index.twig', array(
+                'directories' => $directories,
+                'noCategory' => $noCategory,
+                'categories' => $categories
+             ));
         })->bind('homepage');
 
         $route->get('/refresh', function (Request $request) use ($app) {
@@ -92,6 +92,35 @@ class MainController implements ControllerProviderInterface
           ->value('branch', null)
           ->convert('branch', 'escaper.argument:escape')
           ->bind('rss');
+
+        $route->get('{directory}/', function ($directory) use ($app) {
+            $searchDirectories = array_map(
+                function ($baseDirectory) use ($directory) {
+                    return $baseDirectory . DIRECTORY_SEPARATOR . $directory;
+                },
+                $app['git.repos']
+            );
+            $repositories = $app['git']->getRepositories($searchDirectories, true);
+            $directories = $app['git']->getDirectories($searchDirectories, true);
+
+            $base = '';
+            $breadcrumbs = array_map(
+                function ($part) use (&$base) {
+                    $breadcrumb = array('path' => $base . $part, 'dir' => $part);
+                    $base = $base . $part . DIRECTORY_SEPARATOR;
+                    return $breadcrumb;
+                },
+                explode(DIRECTORY_SEPARATOR, $directory)
+            );
+
+            return $app['twig']->render('index.twig', array(
+                'base' => $directory . DIRECTORY_SEPARATOR,
+                'breadcrumbs' => $breadcrumbs,
+                'directories' => $directories,
+                'repositories' => $repositories,
+            ));
+        })->assert('directory', $app['util.routing']->getDirectoryRegex())
+          ->bind('directory');
 
         return $route;
     }

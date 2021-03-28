@@ -6,26 +6,38 @@
 
 <div class="container">
     <div id="repositories">
-    <div class="search">
-        <input class="search" placeholder="search" autofocus>
-    </div>
-    <div class="list">
-        {% for repository in noCategory %}
-        <div class="repository">
-            <div class="repository-header">
-                <i class="icon-folder-open icon-spaced"></i> <a href="{{ path('repository', {repo: repository.name}) }}"><span class="name">{{ repository.name }}</span></a>
-                <a href="{{ path('rss', {repo: repository.name, branch: 'master'}) }}"><i class="rss pull-right"></i></a>
-            </div>
-            <div class="repository-body">
-                {% if repository.description %}
-                <p>{{ repository.description }}</p>
-                {% else %}
-                <p>There is no repository description file. Please, create one to remove this message.</p>
-                {% endif %}
-            </div>
+        <div class="search">
+            <input class="search" placeholder="search" autofocus>
         </div>
-        {% endfor %}
-    </div>
+        <div class="list">
+            {% if not (breadcrumbs is empty) %}
+            {% include 'directory_breadcrumb.twig' with {'base': base, 'breadcrumbs': breadcrumbs} %}
+            {% endif %}
+
+            {% for directory in directories %}
+            <div class="directory">
+                <div class="directory-header">
+                    <span class="fa fa-folder"></span>  <a href="{{ path('directory', {directory: base ~ directory}) }}">{{ directory }}</a>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% for repository in noCategory %}
+            <div class="repository">
+                <div class="repository-header">
+                    <i class="icon-folder-open icon-spaced"></i> <a href="{{ path('repository', {repo: base ~ repository.name}) }}"><span class="name">{{ repository.name }}</span></a>
+                    <a href="{{ path('rss', {repo: base ~ repository.name, branch: 'master'}) }}"><i class="rss pull-right"></i></a>
+                </div>
+                <div class="repository-body">
+                    {% if repository.description %}
+                    <p>{{ repository.description }}</p>
+                    {% else %}
+                    <p>There is no repository description file. Please, create one to remove this message.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
     
     {% for key, value in categories %}
@@ -41,8 +53,8 @@
                 {% for repository in value %}
                 <div class="repository" style="margin-bottom: 0px;">
                     <div class="repository-header">
-                        <span class="icon-folder-open icon-spaced"></span>  <a href="{{ path('repository', {repo: repository.name}) }}">{{ repository.name }}</a>
-                        <a href="{{ path('rss', {repo: repository.name, branch: 'master'}) }}"><i class="rss pull-right"></i></a>
+                        <span class="icon-folder-open icon-spaced"></span>  <a href="{{ path('repository', {repo: base ~ repository.name}) }}">{{ repository.name }}</a>
+                        <a href="{{ path('rss', {repo: base ~ repository.name, branch: 'master'}) }}"><i class="rss pull-right"></i></a>
                     </div>
                     <div class="repository-body">
                         {% if repository.description %}
@@ -57,8 +69,6 @@
         </div>
     </div>
     {% endfor %}
-
-
     <hr />
 
     {% include 'footer.twig' %}
