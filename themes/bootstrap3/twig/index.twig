@@ -34,11 +34,11 @@
     {% endfor %}
 
     {% for key, value in categories %}
-    <div id="accordion" class="panel-group">
+    <div id="accordion_{{ loop.index }}" class="panel-group">
         <div class="panel panel-default">
             <div class="panel-heading" style="padding-left: 10px;">
                 <div class="panel-title">
-                    <span class="fa fa-book" style="margin-right: 8px;"></span><a data-toggle="collapse" data-parent="#accordion" href="#collapse_{{ loop.index }}" style="font-weight: 600; color:#555;">{{ key }}</a>
+                    <span class="fa fa-book" style="margin-right: 8px;"></span><a data-toggle="collapse" data-parent="#accordion_{{ loop.index }}" href="#collapse_{{ loop.index }}" style="font-weight: 600; color:#555;">{{ key }}</a>
                 </div>
             </div>
             <div id="collapse_{{ loop.index }}" class="panel-collapse collapse in">
