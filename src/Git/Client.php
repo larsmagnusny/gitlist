@@ -70,14 +70,15 @@ class Client extends BaseClient
 
         $allDirectories = array();
         foreach ($allRepositories as $repository) {
-            $parts = explode(DIRECTORY_SEPARATOR, $repository['name']);
+            $parts = explode('/', $repository['name']);
+            
             while (count($parts) > 1) {
                 array_pop($parts);
                 if ($onlyTopLevel && count($parts) != 1) {
                     continue;
                 }
 
-                $directory = implode(DIRECTORY_SEPARATOR, $parts);
+                $directory = implode('/', $parts);
                 if (in_array($directory, $allDirectories)) {
                     continue;
                 }

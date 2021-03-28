@@ -14,7 +14,7 @@ class MainController implements ControllerProviderInterface
         $route = $app['controllers_factory'];
 
         $route->get('/', function () use ($app) {
-            $repositories = $app['git']->getRepositories($app['git.repos']);
+            $repositories = $app['git']->getRepositories($app['git.repos'], true);
             $directories = $app['git']->getDirectories($app['git.repos'], true);
             $categories = array();
             $noCategory = array();
@@ -36,6 +36,8 @@ class MainController implements ControllerProviderInterface
             });
 
             return $app['twig']->render('index.twig', array(
+                'base' => '',
+                'breadcrumbs' => '',
                 'directories' => $directories,
                 'noCategory' => $noCategory,
                 'categories' => $categories
@@ -96,28 +98,49 @@ class MainController implements ControllerProviderInterface
         $route->get('{directory}/', function ($directory) use ($app) {
             $searchDirectories = array_map(
                 function ($baseDirectory) use ($directory) {
-                    return $baseDirectory . DIRECTORY_SEPARATOR . $directory;
+                    return $baseDirectory . '/' . $directory;
                 },
                 $app['git.repos']
             );
             $repositories = $app['git']->getRepositories($searchDirectories, true);
+
+            $categories = array();
+            $noCategory = array();
+
+            foreach($repositories as &$repo) {
+	        if(!is_null($repo["category"])){
+                    if(!array_key_exists($repo["category"], $categories)){
+                        $categories[$repo["category"]] = array();
+                    }
+
+                    $categories[$repo["category"]][] = $repo;
+                } else {
+                    $noCategory[] = $repo;
+                }
+            }
+
+            uksort($categories, function ($k1, $k2) {
+                return strtolower($k2) < strtolower($k1);
+            });
+
             $directories = $app['git']->getDirectories($searchDirectories, true);
 
             $base = '';
             $breadcrumbs = array_map(
                 function ($part) use (&$base) {
                     $breadcrumb = array('path' => $base . $part, 'dir' => $part);
-                    $base = $base . $part . DIRECTORY_SEPARATOR;
+                    $base = $base . $part . '/';
                     return $breadcrumb;
                 },
-                explode(DIRECTORY_SEPARATOR, $directory)
+                explode('/', $directory)
             );
 
             return $app['twig']->render('index.twig', array(
-                'base' => $directory . DIRECTORY_SEPARATOR,
+                'base' => $directory . '/',
                 'breadcrumbs' => $breadcrumbs,
                 'directories' => $directories,
-                'repositories' => $repositories,
+                'noCategory' => $noCategory,
+                'categories' => $categories
             ));
         })->assert('directory', $app['util.routing']->getDirectoryRegex())
           ->bind('directory');

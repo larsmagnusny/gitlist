@@ -147,6 +147,7 @@ class Routing
                     return strlen($b) - strlen($a);
                 }
             );
+
             $regex = implode('|', $quotedPaths);
         }
 
